@@ -1,0 +1,177 @@
+@startuml
+title 网络商场系统——领域类图（Class Diagram）
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 200
+skinparam linetype ortho
+
+package "Domain" {
+  class User {
+    +id: UUID
+    +phone: String
+    +email: String?
+    +passwordHash: String?
+    +nickname: String
+    +avatar: URL?
+    +campus: String
+    +department: String
+    +grade: String?
+    +role: RoleType
+    +status: UserStatus
+    +createdAt: DateTime
+    --
+    +verifySmsCode(code): boolean
+    +setPassword(pw): void
+  }
+
+  enum RoleType {
+    ADMIN
+    USER
+  }
+
+  enum UserStatus {
+    ACTIVE
+    BANNED
+    PENDING_VERIFICATION
+  }
+
+  class Listing {
+    +id: UUID
+    +sellerId: UUID
+    +title: String
+    +description: Text
+    +price: Decimal
+    +condition: Condition
+    +categoryId: UUID
+    +campus: String
+    +deliveryType: DeliveryType
+    +images: URL[0..9]
+    +status: ListingStatus
+    +createdAt: DateTime
+    --
+    +publish(): void
+    +offShelf(): void
+    +delete(): void
+  }
+
+  enum Condition {
+    NEW
+    LIKE_NEW
+    GOOD
+    FAIR
+    POOR
+  }
+
+  enum DeliveryType {
+    PICKUP
+    SHIPPING
+    BOTH
+  }
+
+  enum ListingStatus {
+    DRAFT
+    PUBLISHED
+    OFFSHELF
+    DELETED
+  }
+
+  class Category {
+    +id: UUID
+    +name: String
+    +parentId: UUID?
+  }
+
+  class Conversation {
+    +id: UUID
+    +buyerId: UUID
+    +sellerId: UUID
+    +listingId: UUID
+    +status: ConversationStatus
+    +createdAt: DateTime
+  }
+
+  enum ConversationStatus {
+    NEW
+    ACTIVE
+    CLOSED
+  }
+
+  class Message {
+    +id: UUID
+    +conversationId: UUID
+    +senderId: UUID
+    +body: Text
+    +createdAt: DateTime
+  }
+
+  class ContactExchange {
+    +conversationId: UUID
+    +buyerContact: String?
+    +sellerContact: String?
+    +buyerConfirmed: boolean
+    +sellerConfirmed: boolean
+    +exchangedAt: DateTime?
+  }
+
+  class Favorite {
+    +userId: UUID
+    +listingId: UUID
+    +createdAt: DateTime
+  }
+
+  class Report {
+    +id: UUID
+    +reporterId: UUID
+    +targetType: String
+    +targetId: UUID
+    +reason: Text
+    +evidenceUrl: URL?
+    +status: ReportStatus
+    +createdAt: DateTime
+  }
+
+  enum ReportStatus {
+    NEW
+    IN_REVIEW
+    APPROVED
+    REJECTED
+    NEED_INFO
+  }
+
+  class AuditLog {
+    +id: UUID
+    +actorId: UUID
+    +action: String
+    +targetType: String
+    +targetId: UUID
+    +metadata: JSON
+    +createdAt: DateTime
+    +ip: String
+  }
+}
+
+' Relationships
+User "1" o-- "0..*" Listing : seller
+User "1" o-- "0..*" Favorite
+Favorite "*" --> "1" Listing : target
+Conversation "*" --> "1" Listing
+Conversation "*" --> "1" User : buyer
+Conversation "*" --> "1" User : seller
+Conversation "1" o-- "*" Message
+ContactExchange "1" -- "1" Conversation
+Report "*" --> "1" User : reporter
+Report "*" --> "0..1" Listing : target
+AuditLog "*" --> "1" User : actor
+
+note top of Listing
+图片上传约束：
+- 单张 ≤ 5MB；最多 9 张
+- 类型：jpg/png
+end note
+
+note top of ContactExchange
+核心闭环：
+- 双方均确认后互显手机号/微信
+- 记录交换时间与操作者，审计可追溯
+end note
+
+@enduml

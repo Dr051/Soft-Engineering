@@ -1,0 +1,38 @@
+@startuml
+title 活动图：联系方式交换流程（Req013/Req015）
+skinparam wrapWidth 200
+start
+
+:买家在“商品详情”点击【联系TA】;
+if (是否已有会话?) then (是)
+  :打开现有会话;
+else (否)
+  :创建会话 (buyer_id, seller_id, listing_id, status=NEW);
+endif
+
+:双方在会话中聊天 (短轮询展示未读);
+
+repeat
+  if (买家点击【交换联系方式】?) then (是)
+    :buyer_confirmed = true;
+    :通知卖家待确认;
+  else (否)
+    :保持脱敏展示; 
+  endif
+
+  if (卖家点击【交换联系方式】?) then (是)
+    :seller_confirmed = true;
+    :通知买家已确认;
+  else (否)
+    :保持脱敏展示;
+  endif
+repeat while (尚未双方确认?)
+
+if (buyer_confirmed && seller_confirmed) then (是)
+  :互显完整手机号/微信;
+  :写入审计日志 (action=contact_exchanged);
+  stop
+else (否)
+  :继续等待双方确认;
+endif
+@enduml

@@ -1,0 +1,44 @@
+@startuml
+actor User
+participant Guest as G
+participant Badge as B
+participant Permission as P
+participant Vehicle as V
+participant AuditLog as A
+
+User -> G : inputGuestInfo()
+G -> A : logAudit("Generating badge")
+G -> G : validateInfo()
+
+alt 信息有效
+    alt 还未打印证件或证件丢失
+        G -> A : logAudit("Generating badge")
+        G -> B : generateBadge()
+        G -> B : printBadge()
+        B -> User : returnBadge()
+    end
+else
+    G -> User : showError("Invalid information")
+end
+
+User -> G : chooseNextAction()
+alt 访问其他嘉宾敏感信息
+    G -> A : logAudit("Accessing sensitive info")
+    G -> P : checkAccess()
+    alt 权限足够
+        P -> G : accessSensitiveInfo()
+    else
+        P -> User : accessDenied()
+    end
+else (请求使用车辆)
+    G -> A : logAudit("Requesting vehicle")
+    G -> V : checkVehicleAvailability()
+    alt 车辆可用
+        V -> User : confirmVehicle()
+    else
+        V -> User : vehicleUnavailable()
+    end
+else (不进行操作)
+end
+
+@enduml

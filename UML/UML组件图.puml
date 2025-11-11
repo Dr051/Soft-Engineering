@@ -1,0 +1,74 @@
+@startuml
+title 网络商场系统——组件图（Component Diagram）
+skinparam componentStyle rectangle
+skinparam wrapWidth 200
+skinparam linetype ortho
+
+actor "Web/H5 用户" as Client
+actor "管理员" as AdminUser
+
+rectangle "前端" as FE {
+  component "Web/H5 客户端" as WebClient
+  component "后台管理控制台" as AdminConsole
+}
+
+node "API 网关" as APIGW
+
+package "后端服务" {
+  [Auth Service] as Auth
+  [User/Profile Service] as UserSvc
+  [Listing Service] as ListingSvc
+  [Search/Filter Service] as SearchSvc
+  [Conversation/Message Service] as ConvSvc
+  [Contact Exchange Module] as ExchangeMod
+  [Favorites Service] as FavSvc
+  [Notification Service] as NotifSvc
+  [Moderation Service] as ModSvc
+  [Category Service] as CatSvc
+  [Report Service] as ReportSvc
+  [Admin Service] as AdminSvc
+  [Audit/Logging] as AuditSvc
+  [Media Upload Service] as MediaSvc
+}
+
+database "MySQL" as DB
+cloud "对象存储 (MinIO/OSS)" as OSS
+cloud "短信网关" as SMS
+cloud "邮件服务" as EMAIL
+
+Client --> WebClient
+AdminUser --> AdminConsole
+WebClient --> APIGW
+AdminConsole --> APIGW
+
+APIGW --> Auth
+APIGW --> UserSvc
+APIGW --> ListingSvc
+APIGW --> SearchSvc
+APIGW --> ConvSvc
+ConvSvc --> ExchangeMod
+APIGW --> FavSvc
+APIGW --> NotifSvc
+APIGW --> ModSvc
+APIGW --> CatSvc
+APIGW --> ReportSvc
+APIGW --> AdminSvc
+APIGW --> AuditSvc
+APIGW --> MediaSvc
+
+Auth --> DB
+UserSvc --> DB
+ListingSvc --> DB
+SearchSvc --> DB
+ConvSvc --> DB
+FavSvc --> DB
+ReportSvc --> DB
+AdminSvc --> DB
+AuditSvc --> DB
+CatSvc --> DB
+
+MediaSvc --> OSS
+NotifSvc --> SMS
+NotifSvc --> EMAIL
+
+@enduml

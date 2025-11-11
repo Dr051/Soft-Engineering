@@ -1,0 +1,58 @@
+@startuml
+title 时序图：浏览→联系→消息→交换联系方式
+autonumber
+
+actor Buyer as B
+actor Seller as S
+participant "Web/H5" as C
+participant "API 网关" as API
+participant "Auth Service" as Auth
+participant "Listing Service" as LS
+participant "Conversation Service" as CS
+participant "Message Service" as MS
+participant "Notification Service" as NS
+participant "Audit Service" as AU
+
+B -> C : 打开首页/搜索
+C -> API : GET /listings?query&filters
+API -> LS : searchListings(query, filters)
+LS --> API : results
+API --> C : 返回列表
+
+B -> C : 查看商品详情
+C -> API : GET /listings/{id}
+API -> LS : getListing(id)
+LS --> API : listing detail
+API --> C : detail
+
+B -> C : 点击【联系TA】
+C -> API : POST /conversations
+API -> CS : createConversation(buyer, seller, listing)
+CS -> AU : log("create_conversation", actor=buyer)
+AU --> CS : ok
+CS --> API : conversationId
+API --> C : 会话页面
+
+B -> C : 发送消息
+C -> API : POST /messages
+API -> MS : saveMessage(conversationId, sender, body)
+MS -> NS : notify(seller, "新消息")
+MS -> AU : log("send_message")
+MS --> API : ok
+API --> C : ok
+
+== 联系方式交换 ==
+B -> C : 点击【交换联系方式】
+C -> API : POST /conversations/{id}/exchange (buyerConfirm=true)
+API -> CS : markBuyerConfirmed(id)
+CS --> API : ok
+API --> C : 待卖家确认
+
+S -> C : 点击【交换联系方式】
+C -> API : POST /conversations/{id}/exchange (sellerConfirm=true)
+API -> CS : markSellerConfirmed(id)
+CS -> AU : log("contact_exchanged")
+CS --> API : contacts(phone/wechat)
+API --> C : 显示完整联系方式给双方
+
+@enduml

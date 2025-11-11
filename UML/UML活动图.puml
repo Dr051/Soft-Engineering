@@ -1,0 +1,50 @@
+@startuml
+start
+:输入嘉宾信息;
+:记录审核日志;
+:检查信息有效性;
+
+if (信息有效?) then (yes)
+
+switch (后续操作?)
+case (申请打印证件)
+    :记录审核日志;
+    if (已经打印证件?) then (yes)
+        if (证件丢失?) then (yes)
+            :生成嘉宾证件;
+            :打印证件;
+        else (no)
+        endif
+    else (no)
+    :生成嘉宾证件;
+    :打印证件;
+    endif
+case (访问其他嘉宾敏感信息)
+    :记录审核日志;
+    :检查嘉宾权限;
+    if (权限足够?) then (yes)
+        :访问敏感信息;
+    else (no)
+        :访问被拒绝;
+        stop
+    endif
+case (请求使用车辆)
+    :记录审核日志;
+    if (检查调度车辆可用?) then (yes)
+        :分配车辆;
+    else (no)
+        :提示车辆不可用;
+        stop
+    endif
+case (不进行操作)
+    stop
+endswitch
+
+else (no)
+    :提示错误信息;
+    :提供解决方案;
+    stop
+endif
+
+stop
+@enduml
